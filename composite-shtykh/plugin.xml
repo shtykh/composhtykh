@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="shtykhTabGroups"
+         point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+      <launchConfigurationTabGroup
+            class="composhtykh.tabs.ShtykhTabGroup"
+            id="shtykh.compolaunch.ShtykhTabGroup"
+            type="CompositeShtykh">
+      </launchConfigurationTabGroup>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+      <launchConfigurationTypeImage
+            configTypeID="CompositeShtykh"
+            icon="icons/combine.gif"
+            id="shtykhImage">
+      </launchConfigurationTypeImage>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="composhtykh.CompositeConfigurationDelegate"
+            id="CompositeShtykh"
+            modes="run, debug"
+            name="Composite"
+            public="true">
+      </launchConfigurationType>
+   </extension>
+
+</plugin>
