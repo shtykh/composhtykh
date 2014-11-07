@@ -18,20 +18,19 @@ public class CompositeConfigurationDelegate implements ILaunchConfigurationDeleg
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode,
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
-		ILaunchConfiguration[] children = getChildren(configuration, mode);
+		ILaunchConfiguration[] children = getChildren(configuration);
 		for (ILaunchConfiguration child : children) {
 			child.launch(mode, monitor);
 		}
 	}
+	
 	/**
-	 * 
+	 * Returns children launch configurations
 	 * @param configuration
-	 * @param mode
-	 * @return ILaunchConfigurations are to launch if there are any. empty array otherwise
+	 * @return ILaunchConfigurations are to launch if there are any, empty array otherwise
 	 * @throws CoreException
 	 */
-	public static ILaunchConfiguration[] getChildren(ILaunchConfiguration configuration, 
-			String mode) throws CoreException {
+	public static ILaunchConfiguration[] getChildren(ILaunchConfiguration configuration) throws CoreException {
 		ILaunchConfiguration[] allConfigurations = DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurations();
 		Set<String> childrenNames = new HashSet<String>(configuration.getAttribute(CHILDREN_KEY, new HashSet<String>()));
 		Set<ILaunchConfiguration> children = new HashSet<>();
@@ -42,32 +41,23 @@ public class CompositeConfigurationDelegate implements ILaunchConfigurationDeleg
 			}
 		}
 		if (! childrenNames.isEmpty()) {
-			throw new RuntimeException("Names of the folowing configurations had been changed and thus were lost : \n" + childrenNames.toString());			
+			String name = configuration.getName();
+			name = name == null ? "" : name;
+			throw new RuntimeException("Composite launch configuration " + name + " refers to the folowing configurations which had been changed and thus were lost: \n" 
+						+ childrenNames.toString() + "\n" 
+						+ "To fix that you may delete " + name + " or rename the configuretion listed above" );			
 		}
 		return children.toArray(new ILaunchConfiguration[children.size()]);
 	}
 	
-	public static void setChildren(ILaunchConfigurationWorkingCopy configuration, 
-			String mode, Object[] checkedItems) throws CoreException {
-		Set<String> childrenNames = toLaunchConfigurationsNames(checkedItems, mode);
-		configuration.setAttribute(CHILDREN_KEY, childrenNames);
-	}
-	
 	/**
-	 * 
-	 * @param checkedItems
-	 * @return configurationNamesSet - the set of launchConfigurationNames
-	 * @throws CoreException 
+	 * sets
+	 * @param configuration
+	 * @param childrenNames
+	 * @throws CoreException
 	 */
-	private static Set<String> toLaunchConfigurationsNames(
-			Object[] checkedItems, String mode) throws CoreException {
-		Set<String> configurationNamesSet = new HashSet<>();
-		for (Object object : checkedItems) {
-			if (object instanceof ILaunchConfiguration ) { // TODO && ((ILaunchConfiguration)object).getModes().contains(mode)) {
-				configurationNamesSet.add(object.toString());
-			}
-		}
-		return configurationNamesSet;
+	public static void setChildren(ILaunchConfigurationWorkingCopy configuration, Set<String> childrenNames) throws CoreException {
+		configuration.setAttribute(CHILDREN_KEY, childrenNames);
 	}
 	
 

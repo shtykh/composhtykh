@@ -25,40 +25,33 @@ import composhtykh.CompositeConfigurationDelegate;
 
 public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 
-	private String name;
 	private ITreeContentProvider contentProvider;
-	private CheckboxTreeViewer treeViever;
-	private String mode;
-
-	public ShtykhContentSelectorTab(
-			String mode,
-			String name) {
-				this.mode = mode;
-				this.name = name;
+	private CheckboxTreeViewer configurationsTree;
+	
+	public ShtykhContentSelectorTab() {
 	}
 
 	@Override
 	public void createControl(Composite parent) {
 		IBaseLabelProvider labelProvider = new DecoratingLabelProvider(DebugUITools.newDebugModelPresentation(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator());
 		contentProvider = new LaunchConfigurationTreeContentProvider(getLaunchConfigurationDialog().getMode(), null);
-		treeViever = new ContainerCheckedTreeViewer(parent);
-		treeViever.setContentProvider(contentProvider);
-		treeViever.setLabelProvider(labelProvider);
-		treeViever.setComparator(new WorkbenchViewerComparator());
-		treeViever.setInput(ResourcesPlugin.getWorkspace().getRoot());
+		configurationsTree = new ContainerCheckedTreeViewer(parent);
+		configurationsTree.setContentProvider(contentProvider);
+		configurationsTree.setLabelProvider(labelProvider);
+		configurationsTree.setInput(ResourcesPlugin.getWorkspace().getRoot());
 
-		treeViever.addCheckStateListener(new ICheckStateListener() {
+		configurationsTree.addCheckStateListener(new ICheckStateListener() {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				updateLaunchConfigurationDialog();
 			}
 		});
-		setControl(treeViever.getTree());
+		setControl(configurationsTree.getTree());
 	}
 	
 	@Override
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		try {
-			treeViever.setCheckedElements(CompositeConfigurationDelegate.getChildren(configuration, mode));
+			configurationsTree.setCheckedElements(CompositeConfigurationDelegate.getChildren(configuration));
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
@@ -67,7 +60,7 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		try {
-			CompositeConfigurationDelegate.setChildren(configuration, mode, treeViever.getCheckedElements());
+			CompositeConfigurationDelegate.setChildren(configuration, toLaunchConfigurationsNames(configurationsTree.getCheckedElements()));
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
@@ -76,27 +69,46 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 	
 	@Override
 	public boolean isValid(ILaunchConfiguration launchConfig) {
-		if (hasLoops(launchConfig, new HashSet<ILaunchConfiguration>())) {
+		if(isEmpty(launchConfig)){
+			setMessage(null);
+			setWarningMessage("Configuration " + launchConfig.getName() + " is Empty!");
+			setErrorMessage(null);
+			return true;
+		} else if (hasLoops(launchConfig, new HashSet<String>())) {
+			setMessage(null);
 			setErrorMessage("Configuration " + launchConfig.getName() + " has loops!");
+			setWarningMessage(null);
 			return false;
 		} else {
 			setMessage("Configuration " + launchConfig.getName() + " is perfectly fine to launch!");
+			setErrorMessage(null);
+			setWarningMessage(null);
 			return true;
 		}
 	}
 
-	private boolean hasLoops(ILaunchConfiguration launchConfig, Set<ILaunchConfiguration> ancestors) {
-		if (ancestors.contains(launchConfig)) {
+	private boolean isEmpty(ILaunchConfiguration launchConfig) {
+		boolean result = false;
+		try {
+			result = CompositeConfigurationDelegate.getChildren(launchConfig).length == 0;
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	private boolean hasLoops(ILaunchConfiguration launchConfig, Set<String> ancestors) {
+		if (ancestors.contains(launchConfig.getName())) {
 			return true;
 		}
 		ILaunchConfiguration[] children = null;
 		try {
-			children = CompositeConfigurationDelegate.getChildren(launchConfig, mode);
+			children = CompositeConfigurationDelegate.getChildren(launchConfig);
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		Set<ILaunchConfiguration> nextAncestors = new HashSet<>(ancestors);
-		nextAncestors.add(launchConfig);
+		Set<String> nextAncestors = new HashSet<>(ancestors);
+		nextAncestors.add(launchConfig.getName());
 		for (ILaunchConfiguration child : children) {
 			if (hasLoops(child, nextAncestors)) {
 				return true;
@@ -107,11 +119,27 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 
 	@Override
 	public String getName() {
-		return name;
+		return "Children selection";
 	}
 
 	@Override
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
-		//nothing to do by default
+		// nothing to do here - empty selection is fine for default
+	}
+	
+	/**
+	 * 
+	 * @param checkedItems - items checked on LaunchConfigurationTree
+	 * @return configurationNamesSet - the set of launch configurations names
+	 * @throws CoreException 
+	 */
+	private static Set<String> toLaunchConfigurationsNames(Object[] checkedItems) throws CoreException {
+		Set<String> configurationNamesSet = new HashSet<>();
+		for (Object object : checkedItems) {
+			if (object instanceof ILaunchConfiguration ) {
+				configurationNamesSet.add(object.toString());
+			}
+		}
+		return configurationNamesSet;
 	}
 }

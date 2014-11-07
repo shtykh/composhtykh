@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension
+         point="org.eclipse.debug.core.launchConfigurationTypes">
+      <launchConfigurationType
+            delegate="composhtykh.CompositeConfigurationDelegate"
+            delegateName="Composite"
+            id="CompositeShtykh"
+            modes="run, debug"
+            name="Composite"
+            public="true">
+      </launchConfigurationType>
+   </extension>
 
    <extension
          id="shtykhTabGroups"
@@ -18,16 +29,6 @@
             icon="icons/combine.gif"
             id="shtykhImage">
       </launchConfigurationTypeImage>
-   </extension>
-   <extension
-         point="org.eclipse.debug.core.launchConfigurationTypes">
-      <launchConfigurationType
-            delegate="composhtykh.CompositeConfigurationDelegate"
-            id="CompositeShtykh"
-            modes="run, debug"
-            name="Composite"
-            public="true">
-      </launchConfigurationType>
    </extension>
 
 </plugin>
