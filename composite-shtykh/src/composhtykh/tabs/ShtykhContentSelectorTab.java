@@ -109,8 +109,8 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 			setErrorMessage(null);
 			return true; // Launching empty set of configurations isn't forbidden. Why not?
 		} else if (hasLoops(launchConfig, new HashSet<String>())) {
-			setMessage(null);
 			setErrorMessage("Configuration " + configname + " has loops!");
+			setMessage(null);
 			setWarningMessage(null);
 			return false;
 		} else {
@@ -150,7 +150,7 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-		if (children.length > 0) {
+		if (children == null || children.length > 0) {
 			Set<String> nextAncestors = new HashSet<>(ancestors);
 			nextAncestors.add(launchConfig.getName());
 			for (ILaunchConfiguration child : children) {
