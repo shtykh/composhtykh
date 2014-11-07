@@ -13,13 +13,19 @@ import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 
 public class CompositeConfigurationDelegate implements ILaunchConfigurationDelegate {
 	
+	/**
+	 * The key for storing children ILaunchConfigurations in attributes map 
+	 * I decided to store it in static field for avoiding confusion editing this code
+	 */
 	private static String CHILDREN_KEY = "CHILDREN";
 	
+	/**
+	 * Launches all the children configurations
+	 */
 	@Override
-	public void launch(ILaunchConfiguration configuration, String mode,
+	public void launch(ILaunchConfiguration configuration, String mode, 
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
-		ILaunchConfiguration[] children = getChildren(configuration);
-		for (ILaunchConfiguration child : children) {
+		for (ILaunchConfiguration child : getChildren(configuration)) {
 			child.launch(mode, monitor);
 		}
 	}
