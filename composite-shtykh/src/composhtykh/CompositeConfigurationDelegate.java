@@ -70,7 +70,7 @@ public class CompositeConfigurationDelegate implements ILaunchConfigurationDeleg
 	 * @param childrenNames
 	 * @throws CoreException
 	 */
-	public static void applyChildren(ILaunchConfigurationWorkingCopy configuration, Set<String> childrenNames) {
+	public static void adoptChildren(ILaunchConfigurationWorkingCopy configuration, Set<String> childrenNames) {
 		configuration.setAttribute(CHILDREN_KEY, childrenNames);
 	}
 	
