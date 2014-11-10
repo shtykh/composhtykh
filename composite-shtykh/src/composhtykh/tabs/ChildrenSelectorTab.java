@@ -23,9 +23,9 @@ import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 import composhtykh.CompositeConfigurationDelegate;
 
-public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
+public class ChildrenSelectorTab extends AbstractLaunchConfigurationTab {
 	
-	/**
+	/*
 	 * configurationsTree for interaction with user
 	 */
 	private CheckboxTreeViewer configurationsTree;
@@ -35,9 +35,14 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 	 */
 	@Override
 	public void createControl(Composite parent) {
-		ILabelDecorator labelDecorator = PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator();
-		IBaseLabelProvider labelProvider = new DecoratingLabelProvider(DebugUITools.newDebugModelPresentation(), labelDecorator);
-		ITreeContentProvider contentProvider = new LaunchConfigurationTreeContentProvider(getLaunchConfigurationDialog().getMode(), null);
+		ILabelDecorator labelDecorator = PlatformUI.getWorkbench().
+										getDecoratorManager().
+										getLabelDecorator();
+		IBaseLabelProvider labelProvider = new DecoratingLabelProvider(
+										DebugUITools.newDebugModelPresentation(), 
+										labelDecorator);
+		String mode = getLaunchConfigurationDialog().getMode();
+		ITreeContentProvider contentProvider = new LaunchConfigurationTreeContentProvider(mode, null);
 		configurationsTree = new ContainerCheckedTreeViewer(parent);
 		configurationsTree.setContentProvider(contentProvider);
 		configurationsTree.setLabelProvider(labelProvider);
@@ -57,11 +62,8 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 	 */
 	@Override
 	public void initializeFrom(ILaunchConfiguration configuration) {
-		try {
-			configurationsTree.setCheckedElements(CompositeConfigurationDelegate.getChildren(configuration));
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		Object[] children = CompositeConfigurationDelegate.childrenOf(configuration);
+		configurationsTree.setCheckedElements(children);
 	}
 	
 	/**
@@ -72,21 +74,18 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 	 */
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-		try {
-			Set<String> launchConfigurationsNames = toLaunchConfigurationsNames(configurationsTree.getCheckedElements());
-			CompositeConfigurationDelegate.setChildren(configuration, launchConfigurationsNames);
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		Object[] checkedElements = configurationsTree.getCheckedElements();
+		Set<String> launchConfigurationsNames = toLaunchConfigurationsNames(checkedElements);
+		CompositeConfigurationDelegate.adoptChildren(configuration, launchConfigurationsNames);
 	}
 	
-	/**
+	/*
 	 * Returns names of all checked launch configurations on LaunchConfigurationTree
 	 * @param checkedItems - items checked on LaunchConfigurationTree
 	 * @return configurationNamesSet - the set of launch configurations names
 	 * @throws CoreException 
 	 */
-	private static Set<String> toLaunchConfigurationsNames(Object[] checkedItems) throws CoreException {
+	private static Set<String> toLaunchConfigurationsNames(Object[] checkedItems) {
 		Set<String> configurationNamesSet = new HashSet<>();
 		for (Object object : checkedItems) {
 			if (object instanceof ILaunchConfiguration ) {
@@ -121,21 +120,15 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 		}
 	}
 	
-	/**
+	/*
 	 * Returns whether launchConfig has no children to launch
 	 * @param launchConfig - tested composite configuration
 	 */
 	private boolean isEmpty(ILaunchConfiguration launchConfig) {
-		boolean result = false;
-		try {
-			result = CompositeConfigurationDelegate.getChildren(launchConfig).length == 0;
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
-		return result;
+		return CompositeConfigurationDelegate.childrenOf(launchConfig).length == 0;
 	}
 	
-	/**
+	/*
 	 * Returns  whether launchConfig's launch will cause launchConfig's launch  
 	 * @param launchConfig - tested ILaunchConfiguration
 	 * @param ancestors - names of ILaunchConfigurations currently testing on previous layers of recursion
@@ -144,12 +137,7 @@ public class ShtykhContentSelectorTab extends AbstractLaunchConfigurationTab {
 		if (ancestors.contains(launchConfig.getName())) {
 			return true;
 		}
-		ILaunchConfiguration[] children = null;
-		try {
-			children = CompositeConfigurationDelegate.getChildren(launchConfig);
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		ILaunchConfiguration[] children = CompositeConfigurationDelegate.childrenOf(launchConfig);
 		if (children == null || children.length > 0) {
 			Set<String> nextAncestors = new HashSet<>(ancestors);
 			nextAncestors.add(launchConfig.getName());

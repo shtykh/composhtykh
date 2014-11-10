@@ -1,5 +1,6 @@
 package composhtykh;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +14,7 @@ import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 
 public class CompositeConfigurationDelegate implements ILaunchConfigurationDelegate {
 	
-	/**
+	/*
 	 * The key for storing children ILaunchConfigurations in attributes map 
 	 * I decided to store it in static field for avoiding confusion editing this code
 	 */
@@ -25,7 +26,7 @@ public class CompositeConfigurationDelegate implements ILaunchConfigurationDeleg
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode, 
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
-		for (ILaunchConfiguration child : getChildren(configuration)) {
+		for (ILaunchConfiguration child : childrenOf(configuration)) {
 			child.launch(mode, monitor);
 		}
 	}
@@ -36,9 +37,16 @@ public class CompositeConfigurationDelegate implements ILaunchConfigurationDeleg
 	 * @return ILaunchConfigurations are to launch if there are any, empty array otherwise
 	 * @throws CoreException
 	 */
-	public static ILaunchConfiguration[] getChildren(ILaunchConfiguration configuration) throws CoreException {
-		ILaunchConfiguration[] allConfigurations = DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurations();
-		Set<String> childrenNames = new HashSet<String>(configuration.getAttribute(CHILDREN_KEY, new HashSet<String>()));
+	public static ILaunchConfiguration[] childrenOf(ILaunchConfiguration configuration)  {
+		ILaunchConfiguration[] allConfigurations = null;
+		Set<String> childrenNames = null;
+		try {
+			allConfigurations = DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurations();
+			childrenNames = new HashSet<String>(configuration.getAttribute(CHILDREN_KEY, new HashSet<String>()));
+		} catch (CoreException e) {
+			e.printStackTrace();
+			return new ILaunchConfiguration[]{};
+		}
 		Set<ILaunchConfiguration> children = new HashSet<>();
 		for(ILaunchConfiguration testedConfiguration : allConfigurations) {
 			if (childrenNames.contains(testedConfiguration.toString())) {
@@ -62,7 +70,7 @@ public class CompositeConfigurationDelegate implements ILaunchConfigurationDeleg
 	 * @param childrenNames
 	 * @throws CoreException
 	 */
-	public static void setChildren(ILaunchConfigurationWorkingCopy configuration, Set<String> childrenNames) throws CoreException {
+	public static void applyChildren(ILaunchConfigurationWorkingCopy configuration, Set<String> childrenNames) {
 		configuration.setAttribute(CHILDREN_KEY, childrenNames);
 	}
 	

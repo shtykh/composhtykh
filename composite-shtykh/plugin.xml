@@ -17,7 +17,7 @@
          id="shtykhTabGroups"
          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="composhtykh.tabs.ShtykhTabGroup"
+            class="composhtykh.tabs.CompositeTabGroup"
             id="shtykh.compolaunch.ShtykhTabGroup"
             type="CompositeShtykh">
       </launchConfigurationTabGroup>
